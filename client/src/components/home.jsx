@@ -29,6 +29,7 @@ await axios.delete(`http://localhost:8000/api/delete/${z}`)
   }
   return (
     <>
+    <h1>All Users Details </h1>
       <button>
         <Link to="/addNew">Add New</Link>
       </button>

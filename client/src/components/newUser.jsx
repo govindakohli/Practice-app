@@ -24,7 +24,7 @@ const NewUserData = {firstName , lastName , email , password}
   }
   return (
     <form onSubmit={submitHadler} >
-      <Link to="/">back</Link>
+      <Link to="/allUsers">back</Link>
       <br />
       <br />
       <input type="text" onChange={(e)=>setFirstName(e.target.value)} name="" id="1" placeholder="Fist Name" />
