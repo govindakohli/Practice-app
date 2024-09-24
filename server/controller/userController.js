@@ -1,21 +1,131 @@
 import User from "../model/userModel.js"
+import{generateToken} from "../utils/jwtToken.js"
 
-export const create = async(req , res)=>{
+// export const patientRegister = async (req, res) => {
+//     try {
+//       const { email, password } = req.body;
+  
+//       // Check if the necessary fields are provided
+//       if (!email || !password) {
+//         return res.status(400).json({
+//           success: false,
+//           message: "Please fill full form",
+//         });
+//       }
+  
+//       // Check if the user is already registered
+//       let user = await User.findOne({ email });
+//       if (user) {
+//         return res.status(400).json({
+//           success: false,
+//           message: "User Already Registered",
+//         });
+//       }
+  
+//       // Create new user
+//       user = await User.create({
+//         email,
+//         password,
+//       });
+  
+//       // Generate token and send response
+//       generateToken(user, "User Registered Successfully", 200, res);
+//     } catch (error) {
+//       // Handle any server errors
+//       return res.status(500).json({
+//         success: false,
+//         message: "Internal Server Error",
+//         error: error.message,
+//       });
+//     }
+//   };
+  
+export const create = async (req, res) => {
     try {
-        const userData = new User(req.body);
-
-        if(!userData){
-            return res.status(404).json({msg:"User data not found"})
-        }
-        const savedData = await userData.save();
-        res.status(200).json({
-            savedData,
-            msg:"User Created successfully "})
-
+      const userData = new User(req.body);
+  
+      if (!userData) {
+        return res.status(404).json({ msg: "User data not found" });
+      }
+  
+      const savedData = await userData.save();
+  
+      // Remove this res.status(200).json() since generateToken will handle the response
+      // Pass the saved user data to the generateToken function
+      generateToken(savedData, "User Registered Successfully", 200, res);
+  
     } catch (error) {
-        res.status(500).json({error:error})
+      // Send error response if any exception occurs
+      res.status(500).json({ error: error.message });
     }
-}
+  };
+
+  export const login = async (req, res) => {
+    try {
+      const { email, password } = req.body;
+  
+      // Validate request body
+      if (!email || !password ) {
+        return res.status(400).json({
+          success: false,
+          message: "Please Provide All Details!",
+        });
+      }
+  
+
+      // Check if the user exists
+      const user = await User.findOne({ email }).select("+password");
+      if (!user) {
+        return res.status(400).json({
+          success: false,
+          message: "User not found!",
+        });
+      }
+  
+      // Compare provided password with the stored password
+      const isPasswordMatched = await user.compareUserPassword(password);
+      if (!isPasswordMatched) {
+        return res.status(400).json({
+          success: false,
+          message: "Invalid Password!",
+        });
+      }
+      // Generate token and send response
+      generateToken(user, `User Logged In Successfully`, 200, res);
+    } catch (error) {
+      // Catch any other errors and send a server error response
+      return res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  };
+
+  export const logoutUser = (req, res) => {
+    try {
+      // Clear the patient token cookie and send the response
+      res
+        .status(201)
+        .cookie("UserToken", "", {
+          httpOnly: true,
+          expires: new Date(Date.now()),
+        })
+        .json({
+          success: true,
+          message: "User Logged Out Successfully!",
+        });
+    } catch (error) {
+      // Catch any unexpected errors and send a server error response
+      res.status(500).json({
+        success: false,
+        message: "Internal Server Error",
+        error: error.message,
+      });
+    }
+  };
+  
+  
 
 export const getAll = async(req , res)=>{
     try {

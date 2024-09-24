@@ -3,8 +3,10 @@ import mongoose from "mongoose";
 import dotenv from "dotenv"
 import cors from "cors"
 import route from "./routes/userRoute.js";
+import cookieParser from "cookie-parser";
 
 const app = express();
+app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
