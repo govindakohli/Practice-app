@@ -1,29 +1,46 @@
 import express from "express";
 import mongoose from "mongoose";
-import dotenv from "dotenv"
-import cors from "cors"
+import dotenv from "dotenv";
+import cors from "cors";
 import route from "./routes/userRoute.js";
 import cookieParser from "cookie-parser";
 
+// Load environment variables
+dotenv.config();
+
 const app = express();
+
+// Middleware
 app.use(cookieParser());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(cors())
-dotenv.config()
+// CORS middleware configuration
+app.use(cors({
+    origin: process.env.FRONTEND_URL, // Allow requests from frontend origin
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    credentials: true, // Allow cookies and credentials to be sent
+    allowedHeaders: ["Content-Type", "Authorization"],
+}));
 
-const PORT = process.env.PORT || 7000
-const URL = process.env.MONGOURL
+// Set PORT and MONGOURL from environment variables
+const PORT = process.env.PORT || 7000;
+const URL = process.env.MONGOURL 
 
-mongoose.connect(URL).then(()=>{
-    console.log("DB connected Successfully")
+// Database connection
+mongoose.connect(URL, {
+  useNewUrlParser: true,
+  useUnifiedTopology: true,
+}).then(() => {
+    console.log("DB connected Successfully");
 
-    app.listen(PORT , ()=>{
-        console.log(`server is running on port: ${PORT}`)
-    })
-}).catch((err)=>{
-    console.log(`getting error while connecting ${err}`)
-})
+    // Start the server
+    app.listen(PORT, () => {
+        console.log(`Server is running on port: ${PORT}`);
+    });
+}).catch((err) => {
+    console.log(`Error connecting to DB: ${err}`);
+});
 
-app.use("/api" , route)
+// Routes
+app.use("/api", route);

@@ -1,48 +1,104 @@
-import React, { useState } from "react";
+import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios"
+import axios from "axios";
 import toast from "react-hot-toast";
+import { useFormik } from "formik";
+import * as Yup from "yup"; // Optional for validation
 
-function newUser() {
-  const [firstName , setFirstName] = useState()
-  const [lastName , setLastName] = useState()
-  const [email , setEmail] = useState()
-  const [password , setPassword] = useState()
-  const navigate = useNavigate()
-  
-const NewUserData = {firstName , lastName , email , password}
+function NewUser() {
+  const navigate = useNavigate();
 
-  const submitHadler = async(e)=>{
-    e.preventDefault()
-   await axios.post("http://localhost:8000/api/create" , NewUserData )
-   .then((value)=>{
-    toast.success(value.data.msg , {position:"top-center"})})
-    navigate("/")
-  // .then((val)=>console.log(val.data.msg))
-   .catch((err)=>console.log(err))
-   location.reload();
-  }
+  // Formik logic
+  const formik = useFormik({
+    initialValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: ""
+    },
+    validationSchema: Yup.object({
+      firstName: Yup.string().required("First name is required"),
+      lastName: Yup.string().required("Last name is required"),
+      email: Yup.string().email("Invalid email address").required("Email is required"),
+      password: Yup.string().min(6, "Password should be at least 6 characters").required("Password is required")
+    }),
+    onSubmit: async (values) => {
+      try {
+        const response = await axios.post("http://localhost:8000/api/create", values);
+        toast.success(response.data.msg, { position: "top-center" });
+        navigate("/");
+        location.reload();
+      } catch (err) {
+        console.error(err);
+        toast.error("An error occurred.");
+      }
+    }
+  });
+
   return (
-    <form onSubmit={submitHadler} >
-      <Link to="/allUsers">back</Link>
+    <form onSubmit={formik.handleSubmit}>
+      <Link to="/">Back</Link>
       <br />
       <br />
-      <input type="text" onChange={(e)=>setFirstName(e.target.value)} name="" id="1" placeholder="Fist Name" />
+      <input
+        type="text"
+        name="firstName"
+        id="1"
+        placeholder="First Name"
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        value={formik.values.firstName}
+      />
+      {formik.touched.firstName && formik.errors.firstName ? (
+        <div style={{ color: "red" }}>{formik.errors.firstName}</div>
+      ) : null}
       <br />
       <br />
-      <input type="text"onChange={(e)=>setLastName(e.target.value)} name="" id="2" placeholder=" Last Name" />
+      <input
+        type="text"
+        name="lastName"
+        id="2"
+        placeholder="Last Name"
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        value={formik.values.lastName}
+      />
+      {formik.touched.lastName && formik.errors.lastName ? (
+        <div style={{ color: "red" }}>{formik.errors.lastName}</div>
+      ) : null}
       <br />
       <br />
-      <input type="email"onChange={(e)=>setEmail(e.target.value)} name="" id="3" placeholder="Email" />
+      <input
+        type="email"
+        name="email"
+        id="3"
+        placeholder="Email"
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        value={formik.values.email}
+      />
+      {formik.touched.email && formik.errors.email ? (
+        <div style={{ color: "red" }}>{formik.errors.email}</div>
+      ) : null}
       <br />
       <br />
-      <input type="password"onChange={(e)=>setPassword(e.target.value)} name="4" id="" placeholder="Password" />
+      <input
+        type="password"
+        name="password"
+        id="4"
+        placeholder="Password"
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        value={formik.values.password}
+      />
+      {formik.touched.password && formik.errors.password ? (
+        <div style={{ color: "red" }}>{formik.errors.password}</div>
+      ) : null}
       <br />
       <br />
-      <br />
-      <button>New User</button>
+      <button type="submit">New User</button>
     </form>
   );
 }
 
-export default newUser;
+export default NewUser;

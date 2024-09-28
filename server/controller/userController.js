@@ -104,19 +104,19 @@ export const create = async (req, res) => {
 
   export const logoutUser = (req, res) => {
     try {
-      // Clear the patient token cookie and send the response
       res
-        .status(201)
+        .status(200)
         .cookie("UserToken", "", {
           httpOnly: true,
-          expires: new Date(Date.now()),
+          expires: new Date(0), // Clear the cookie by setting an expired date
+          sameSite: "None", // SameSite "None" for cross-site cookies in production
+          secure: process.env.NODE_ENV === "production", // Ensure HTTPS in production
         })
         .json({
           success: true,
           message: "User Logged Out Successfully!",
         });
     } catch (error) {
-      // Catch any unexpected errors and send a server error response
       res.status(500).json({
         success: false,
         message: "Internal Server Error",

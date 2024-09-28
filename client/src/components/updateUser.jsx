@@ -1,62 +1,116 @@
-import React, { useState , useEffect} from "react";
-import { Link, useNavigate , useParams } from "react-router-dom";
-import axios from "axios"
+import React, { useEffect } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import axios from "axios";
 import toast from "react-hot-toast";
+import { useFormik } from "formik";
+import * as Yup from "yup";
 
-function updateUser() {
-  const [firstName , setFirstName] = useState()
-  const [lastName , setLastName] = useState()
-  const [email , setEmail] = useState()
-  const [password , setPassword] = useState()
-  const navigate = useNavigate()
-  const[updateUser,setupdateUser]= useState()
+function UpdateUser() {
+  const navigate = useNavigate();
+  const { id } = useParams();
 
+  // Formik logic
+  const formik = useFormik({
+    initialValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+    },
+    validationSchema: Yup.object({
+      firstName: Yup.string().required("First name is required"),
+      lastName: Yup.string().required("Last name is required"),
+      email: Yup.string().email("Invalid email address").required("Email is required"),
+      password: Yup.string().min(6, "Password should be at least 6 characters").required("Password is required"),
+    }),
+    onSubmit: async (values) => {
+      try {
+        const response = await axios.put(`http://localhost:8000/api/update/${id}`, values);
+        toast.success(response.data.msg, { position: "top-center" });
+        navigate("/");
+      } catch (err) {
+        console.error(err);
+        toast.error("An error occurred.");
+      }
+    },
+  });
 
-  console.log(updateUser)
-  
-const NewUserData = {firstName , lastName , email , password}
-  const{id}= useParams()
-  useEffect(()=>{
-    axios.get(`http://localhost:8000/api/getOne/${id}`)
-    .then((value)=>{
-      setFirstName(value.data.firstName)
-      setLastName(value.data.lastName)
-      setEmail(value.data.email)
-      setPassword(value.data.password)
-    })
-    .catch((err)=>console.log(err))
-  },[id])
+  useEffect(() => {
+    // Fetch user data and set form values
+    axios
+      .get(`http://localhost:8000/api/getOne/${id}`)
+      .then((response) => {
+        const userData = response.data;
+        formik.setValues({
+          firstName: userData.firstName || "",
+          lastName: userData.lastName || "",
+          email: userData.email || "",
+          password: userData.password || "",
+        });
+      })
+      .catch((err) => console.error(err));
+  }, [id]);
 
-  const submitHandler = async(e)=>{
-  e.preventDefault()
-  axios.put(`http://localhost:8000/api/update/${id}
-`,NewUserData )
-.then((res)=>{
-  toast.success(res.data.msg , {position:"top-center"})
-})
-.catch((err)=>console.log(err))
-  }
   return (
-    <form onSubmit={submitHandler}>
-      <Link to="/allUsers">back</Link>
+    <form onSubmit={formik.handleSubmit}>
+      <Link to="/">Back</Link>
       <br />
       <br />
-      <input type="text"  onChange={(e)=>setFirstName(e.target.value)} name="" value={firstName} id="1" placeholder="Fist Name"  />
+      <input
+        type="text"
+        name="firstName"
+        placeholder="First Name"
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        value={formik.values.firstName}
+      />
+      {formik.touched.firstName && formik.errors.firstName ? (
+        <div style={{ color: "red" }}>{formik.errors.firstName}</div>
+      ) : null}
       <br />
       <br />
-      <input type="text"onChange={(e)=>setLastName(e.target.value)} name="" id="2" value={lastName} placeholder=" Last Name" />
+      <input
+        type="text"
+        name="lastName"
+        placeholder="Last Name"
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        value={formik.values.lastName}
+      />
+      {formik.touched.lastName && formik.errors.lastName ? (
+        <div style={{ color: "red" }}>{formik.errors.lastName}</div>
+      ) : null}
       <br />
       <br />
-      <input type="email"onChange={(e)=>setEmail(e.target.value)} name="" id="3" value={email} placeholder="Email" />
+      <input
+        type="email"
+        name="email"
+        placeholder="Email"
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        value={formik.values.email}
+      />
+      {formik.touched.email && formik.errors.email ? (
+        <div style={{ color: "red" }}>{formik.errors.email}</div>
+      ) : null}
       <br />
       <br />
-      <input type="password"onChange={(e)=>setPassword(e.target.value)} name="4" value={password} id="" placeholder="Password" />
+      <input
+        type="password"
+        name="password"
+        placeholder="Password"
+        onChange={formik.handleChange}
+        onBlur={formik.handleBlur}
+        value={formik.values.password}
+      />
+      {formik.touched.password && formik.errors.password ? (
+        <div style={{ color: "red" }}>{formik.errors.password}</div>
+      ) : null}
       <br />
       <br />
-      <br />
-      <button>Update User</button>
+      <button type="submit">Update User</button>
     </form>
-  )
+  );
 }
 
-export default updateUser
+export default UpdateUser;
